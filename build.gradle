@@ -1,0 +1,195 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		jcenter()
+	}
+	dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+    }
+}
+
+plugins {
+	id 'java'
+	id 'eclipse'
+	id 'idea'
+	id 'checkstyle'
+	id 'maven'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+//noinspection GroovyUnusedAssignment
+sourceCompatibility = 1.8
+//noinspection GroovyUnusedAssignment
+targetCompatibility = 1.8
+
+version = btVer
+group = "net.thesilkminer.bibliotech"
+//noinspection GroovyUnusedAssignment
+archivesBaseName = "Biblio-Tech"
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+configurations {
+    shade
+	pack
+    compile.extendsFrom shade
+	compile.extendsFrom pack
+}
+
+dependencies {
+	compile group: 'com.google.guava', name: 'guava', version: '12.0'
+	shade group: 'com.google.guava', name: 'guava', version: '12.0'
+	pack group: 'com.google.guava', name: 'guava', version: '12.0'
+	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+	shade group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+	pack group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+	compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
+	shade group: 'org.jetbrains', name: 'annotations', version: '15.0'
+	pack group: 'org.jetbrains', name: 'annotations', version: '15.0'
+	compile project(":SKL-Java-Interpreter")
+	shade project(":SKL-Java-Interpreter")
+	pack project(":SKL-Java-Interpreter")
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+//noinspection GroovyAssignabilityCheck
+sourceSets {
+	main {
+		java {
+			srcDir "launcher/src/main/java"
+			srcDir "core/src/main/java"
+			srcDir "forge/src/main/java"
+			//srcDir "mods/<modname>/src/main/java"
+		}
+		resources {
+			srcDir "launcher/src/main/resources"
+			srcDir "core/src/main/resources"
+			srcDir "forge/src/main/resources"
+			//srcDir "mods/<modname>/src/main/resources"
+		}
+	}
+	test {
+		java {
+			srcDir "launcher/src/test/java"
+			srcDir "core/src/test/java"
+			srcDir "forge/src/test/java"
+			//srcDir "mods/<modname>/src/test/java"
+		}
+		resources {
+			srcDir "launcher/src/test/resources"
+			srcDir "core/src/test/resources"
+			srcDir "forge/src/test/resources"
+			//srcDir "mods/<modname>/src/test/resources"
+		}
+	}
+}
+
+ext.jarManifest = manifest {
+	attributes(
+		"Archive-Type": "jar"
+	)
+}
+
+ext.zipManifest = manifest {
+	attributes(
+		"Archive-Type": "zip"
+	)
+}
+
+ext.unarchivedManifest = manifest {
+	attributes(
+		"Archive-Type": "unarchived"
+	)
+}
+
+ext.authorManifest = manifest {
+	attributes(
+		"Authors": "TheSilkMiner"
+	)
+}
+
+ext.runnableManifest = manifest {
+	attributes(
+		"Main-Class": "net.thesilkminer.booktech.launcher.Launcher"
+	)
+}
+
+ext.gitManifest = manifest {
+	attributes(
+		"Travis-Build": "false"
+	)
+}
+
+ext.shadowManifest = manifest {
+	attributes (
+		"ShadowJar": "true"
+	)
+}
+
+ext.normalManifest = manifest {
+	attributes (
+		"ShadowJar": "false"
+	)
+}
+
+ext.sourcesManifest = manifest {
+	attributes(
+		"__comment": "This archive only contains sources: you still need to download the main archive to use/develop with the software"
+	)
+}
+
+// sort of an hack but it works
+// this is the minimal jar...
+jar {
+	classifier = 'minimal'
+    manifest {
+        from runnableManifest, gitManifest, jarManifest, authorManifest, normalManifest
+    }
+}
+
+shadowJar {
+    configurations = [ project.configurations.shade ]
+    exclude '**/*.html'
+	manifest {
+		from runnableManifest, gitManifest, jarManifest, authorManifest, shadowManifest
+	}
+}
+
+//noinspection GroovyAssignabilityCheck
+build.dependsOn shadowJar
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+	manifest {
+		from gitManifest, jarManifest, authorManifest, normalManifest, sourcesManifest
+	}
+}
+
+// ... and this is the jar you should use.
+task normalJar(type: Jar, dependsOn: classes) {
+	manifest {
+        from runnableManifest, gitManifest, jarManifest, authorManifest, normalManifest
+    }
+	from sourceSets.main.output
+	configurations.pack.each { dependency ->
+		from(project.zipTree(dependency)){
+            exclude 'META-INF', 'META-INF/**'
+        }
+	}
+}
+
+artifacts {
+    archives sourcesJar
+	archives normalJar
+}
+
+task wrapper (type: Wrapper) {
+	gradleVersion = "2.14.1-rc-1"
+}
+
+

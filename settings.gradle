@@ -1,0 +1,2 @@
+rootProject.name = 'Biblio-Tech'
+include ":SKL-Java-Interpreter"
