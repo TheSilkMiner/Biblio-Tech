@@ -55,8 +55,6 @@ public class ConsoleFrame extends JFrame {
 		this.logBox.setCaretPosition(this.logBox.getDocument().getLength());
 	}
 
-	@Deprecated
-	@SuppressWarnings("unused")
 	public final void purge() {
 		try {
 			java.awt.EventQueue.invokeAndWait(() -> this.logBox.setText(""));

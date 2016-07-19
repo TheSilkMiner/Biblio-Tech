@@ -1,11 +1,14 @@
 package net.thesilkminer.bibliotech.launcher.logging;
 
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import net.thesilkminer.bibliotech.launcher.crash.ReportedException;
 import net.thesilkminer.bibliotech.launcher.os.Os;
 import net.thesilkminer.bibliotech.launcher.ui.console.ConsoleFrame;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -19,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -36,22 +40,17 @@ import javax.annotation.Nonnull;
 public final class Logger {
 
 	private static final Map<String, Logger> CACHE = Maps.newLinkedHashMap();
-
-	@Nonnull
-	public static Logger obtain(final String source) {
-		if (!CACHE.containsKey(source)) CACHE.put(source, new Logger(source));
-		return CACHE.get(source);
-	}
-
 	private static Logger loggerLogger;
 	private static PrintWriter out;
 	private static Level minimum;
+	private static List<Pair<Level, String>> messagesCache;
 	private final String source;
 
 	private Logger(final String source) {
 		try {
 			initLogFile();
 			this.source = source;
+			if (messagesCache == null) messagesCache = Lists.newLinkedList();
 			if (minimum == null) minimum = Level.defaultLevel();
 			if (loggerLogger != null) loggerLogger.fine(String.format("Requested new logger for source %s", source));
 		} catch (final IOException e) {
@@ -64,6 +63,12 @@ public final class Logger {
 		final String mainSource = "Logger";
 		loggerLogger = Logger.obtain(mainSource);
 		loggerLogger.fine(String.format("Requested new logger for source %s", mainSource));
+	}
+
+	@Nonnull
+	public static Logger obtain(final String source) {
+		if (!CACHE.containsKey(source)) CACHE.put(source, new Logger(source));
+		return CACHE.get(source);
 	}
 
 	private static void initLogFile() throws IOException {
@@ -137,6 +142,11 @@ public final class Logger {
 
 	public static void minimum(final Level minimum) {
 		Logger.minimum = minimum;
+		ConsoleFrame.INSTANCE.purge();
+		for (final Pair<Level, String> pair : messagesCache) {
+			if (pair.getLeft().ordinal() < minimum.ordinal()) continue;
+			ConsoleFrame.INSTANCE.appendLine(pair.getRight());
+		}
 	}
 
 	private String format(final Level level, final String message) {
@@ -158,6 +168,7 @@ public final class Logger {
 	public void log(final Level level, final String message) {
 		final String msg = this.format(level, message);
 		out.println(msg);
+		messagesCache.add(Pair.of(level, msg));
 
 		if (level.ordinal() < minimum.ordinal()) return;
 

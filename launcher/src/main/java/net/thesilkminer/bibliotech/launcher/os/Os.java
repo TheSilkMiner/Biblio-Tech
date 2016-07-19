@@ -71,7 +71,14 @@ public enum Os {
 	@Override
 	@Nonnull
 	public final String toString() {
-		return this.name().substring(0, 1).toUpperCase().concat(this.name().substring(1).toLowerCase());
+		final String[] names = this.name().split("_");
+		final StringBuilder toString = new StringBuilder();
+		java.util.Arrays.stream(names).forEach(name -> {
+			toString.append(name.substring(0, 1));
+			toString.append(name.substring(1).toLowerCase());
+			toString.append(' ');
+		});
+		return toString.toString();
 	}
 
 	public static Os getCurrentOs() {
