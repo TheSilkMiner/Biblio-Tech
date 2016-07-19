@@ -145,7 +145,7 @@ public final class Logger {
 		ConsoleFrame.INSTANCE.purge();
 		for (final Pair<Level, String> pair : messagesCache) {
 			if (pair.getLeft().ordinal() < minimum.ordinal()) continue;
-			ConsoleFrame.INSTANCE.appendLine(pair.getRight());
+			ConsoleFrame.INSTANCE.appendLine(pair.getLeft(), pair.getRight());
 		}
 	}
 
@@ -173,7 +173,7 @@ public final class Logger {
 		if (level.ordinal() < minimum.ordinal()) return;
 
 		System.out.println(msg);
-		ConsoleFrame.INSTANCE.appendLine(msg);
+		ConsoleFrame.INSTANCE.appendLine(level, msg);
 	}
 
 	public void trace(final String message) {
