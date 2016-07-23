@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Contract;
 
 import java.awt.Color;
 
+import javax.annotation.Nonnull;
 import javax.swing.UIManager;
 
 /**
@@ -31,6 +32,8 @@ public class Launcher {
 		log.info("Successfully loaded and constructed console");
 		LoadingFrame.INSTANCE.init();
 		log.info("Successfully loaded and constructed frame");
+		LoadingFrame.INSTANCE.updateProgressBarGently(100, "ASD"); //TODO Debug line
+		new net.thesilkminer.bibliotech.launcher.ui.LauncherFrame(); //TODO Debug line
 	}
 
 	@Contract(pure = true)
@@ -38,7 +41,7 @@ public class Launcher {
 		return log;
 	}
 
-	public static void main(final String... args) {
+	public static void main(@Nonnull final String... args) {
 		try {
 			for (final UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 				if ("Nimbus".equalsIgnoreCase(info.getName())) UIManager.setLookAndFeel(info.getClassName());

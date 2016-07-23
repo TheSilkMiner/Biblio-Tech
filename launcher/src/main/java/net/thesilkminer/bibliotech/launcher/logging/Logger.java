@@ -52,7 +52,7 @@ public final class Logger {
 			this.source = source;
 			if (messagesCache == null) messagesCache = Lists.newLinkedList();
 			if (minimum == null) minimum = Level.defaultLevel();
-			if (loggerLogger != null) loggerLogger.fine(String.format("Requested new logger for source %s", source));
+			if (loggerLogger != null) loggerLogger.finer(String.format("Requested new logger for source %s", source));
 		} catch (final IOException e) {
 			Throwables.propagate(e);
 			throw new RuntimeException(e); // Dead code, but who cares?
@@ -62,7 +62,7 @@ public final class Logger {
 	static {
 		final String mainSource = "Logger";
 		loggerLogger = Logger.obtain(mainSource);
-		loggerLogger.fine(String.format("Requested new logger for source %s", mainSource));
+		loggerLogger.finer(String.format("Requested new logger for source %s", mainSource));
 	}
 
 	@Nonnull
@@ -140,7 +140,7 @@ public final class Logger {
 		return latest;
 	}
 
-	public static void minimum(final Level minimum) {
+	public static void minimum(@Nonnull final Level minimum) {
 		Logger.minimum = minimum;
 		ConsoleFrame.INSTANCE.purge();
 		for (final Pair<Level, String> pair : messagesCache) {
@@ -149,7 +149,8 @@ public final class Logger {
 		}
 	}
 
-	private String format(final Level level, final String message) {
+	@Nonnull
+	private String format(@Nonnull final Level level, @Nonnull final String message) {
 		// Is GregorianCalendar cache-able?
 		final Calendar cal = new GregorianCalendar();
 		return String.format("%02d/%02d/%02d %02d:%02d:%02d %s [%s] [%s] %s",
@@ -165,7 +166,7 @@ public final class Logger {
 				message);
 	}
 
-	public void log(final Level level, final String message) {
+	public void log(@Nonnull final Level level, @Nonnull final String message) {
 		final String msg = this.format(level, message);
 		out.println(msg);
 		messagesCache.add(Pair.of(level, msg));
@@ -176,35 +177,35 @@ public final class Logger {
 		ConsoleFrame.INSTANCE.appendLine(level, msg);
 	}
 
-	public void trace(final String message) {
+	public void trace(@Nonnull final String message) {
 		this.log(Level.TRACE, message);
 	}
 
-	public void debug(final String message) {
+	public void debug(@Nonnull final String message) {
 		this.log(Level.DEBUG, message);
 	}
 
-	public void finest(final String message) {
+	public void finest(@Nonnull final String message) {
 		this.log(Level.FINEST, message);
 	}
 
-	public void finer(final String message) {
+	public void finer(@Nonnull final String message) {
 		this.log(Level.FINER, message);
 	}
 
-	public void fine(final String message) {
+	public void fine(@Nonnull final String message) {
 		this.log(Level.FINE, message);
 	}
 
-	public void info(final String message) {
+	public void info(@Nonnull final String message) {
 		this.log(Level.INFO, message);
 	}
 
-	public void warning(final String message) {
+	public void warning(@Nonnull final String message) {
 		this.log(Level.WARNING, message);
 	}
 
-	public void error(final String message) {
+	public void error(@Nonnull final String message) {
 		this.log(Level.ERROR, message);
 	}
 }

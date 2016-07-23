@@ -63,6 +63,7 @@ public enum Os {
 		return new File(this.userHome());
 	}
 
+	@Nonnull
 	public final String details() {
 		return String.format("%s (%s architecture) version %s", System.getProperty("os.name"),
 				System.getProperty("os.arch"), System.getProperty("os.version"));
@@ -81,6 +82,7 @@ public enum Os {
 		return toString.toString();
 	}
 
+	@Nonnull
 	public static Os getCurrentOs() {
 		final String os = System.getProperty("os.name").toUpperCase(java.util.Locale.ENGLISH);
 		if (os.contains("WIN")) return WINDOWS;

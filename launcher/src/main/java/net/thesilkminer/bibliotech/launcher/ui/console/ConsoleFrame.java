@@ -5,9 +5,9 @@ import com.google.common.base.Throwables;
 import net.thesilkminer.bibliotech.launcher.crash.ReportedException;
 import net.thesilkminer.bibliotech.launcher.logging.Level;
 
-import java.awt.Color;
 import java.awt.Dimension;
 
+import javax.annotation.Nonnull;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
@@ -75,34 +75,14 @@ public class ConsoleFrame extends JFrame {
 
 	@Deprecated
 	@SuppressWarnings("unused")
-	public final void appendLine(final String line) {
+	public final void appendLine(@Nonnull final String line) {
 		this.appendLine(Level.INFO, line);
 	}
 
-	public final void appendLine(final Level level, final String line) {
+	public final void appendLine(@Nonnull final Level level, @Nonnull final String line) {
 		final Document doc = this.logBox.getDocument();
 		final SimpleAttributeSet color = new SimpleAttributeSet();
-		switch (level) {
-			case INFO:
-				break;
-			case ERROR:
-				StyleConstants.setForeground(color, Color.RED);
-				break;
-			case WARNING:
-				StyleConstants.setForeground(color, Color.YELLOW);
-				break;
-			case FINE:
-			case FINER:
-			case FINEST:
-			default:
-				StyleConstants.setForeground(color, Color.LIGHT_GRAY);
-				break;
-			case DEBUG:
-				StyleConstants.setForeground(color, Color.PINK);
-				break;
-			case TRACE:
-				StyleConstants.setForeground(color, Color.MAGENTA);
-		}
+		StyleConstants.setForeground(color, level.color());
 		try {
 			doc.insertString(doc.getLength(), line + (line.endsWith("\n")? "" : "\n"), color);
 		} catch (final BadLocationException exception) {
@@ -114,7 +94,12 @@ public class ConsoleFrame extends JFrame {
 	public final void purge() {
 		try {
 			java.awt.EventQueue.invokeAndWait(() -> this.logBox.setText(""));
-		} catch (final Exception e) {
+		} catch (final Error error) {
+			if (!error.getMessage().contains("event dispatcher thread")) throw error;
+			// Async call not available for the event dispatcher thread
+			// Try with a sync call
+			this.logBox.setText("");
+		} catch (final Throwable e) {
 			final ReportedException report = new ReportedException(e.getMessage(), e);
 			report.description("Exception while purging console");
 			report.addCustomProvider("Console status", (crash, builder) -> {

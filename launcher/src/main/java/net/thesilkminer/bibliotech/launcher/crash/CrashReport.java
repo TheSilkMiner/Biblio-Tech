@@ -45,6 +45,7 @@ public class CrashReport {
 			return toString.toString();
 		}
 
+		@NotNull
 		private static SoftwareStatus test() {
 			SoftwareStatus current;
 			try {
@@ -89,6 +90,7 @@ public class CrashReport {
 			return this.name().substring(0, 1).concat(this.name().substring(1).toLowerCase());
 		}
 
+		@NotNull
 		public static PlatformType test() {
 			try {
 				Class.forName("net.thesilkminer.bibliotech.launcher.ui.LauncherFrame");

@@ -1,5 +1,7 @@
 package net.thesilkminer.bibliotech.launcher.ui;
 
+import net.thesilkminer.bibliotech.launcher.Launcher;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -30,7 +32,7 @@ public class LoadingFrame extends JFrame {
 
 	private LoadingFrame() {
 		super();
-		this.setTitle("Book-Tech Launcher");
+		this.setTitle("Loading Biblio-Tech...");
 		this.setUndecorated(true);
 		this.setOpacity(0.7f);
 		this.setMinimumSize(new Dimension(300, 260));
@@ -43,7 +45,9 @@ public class LoadingFrame extends JFrame {
 
 		final JLabel label = new JLabel();
 		label.setText("");
-		label.setIcon(new ImageIcon(this.getClass().getResource("/assets/biblio-tech/launcher/gui/launcher/logo_large.png")));
+		label.setIcon(new ImageIcon(this.getClass().getResource(
+				"/assets/biblio-tech/launcher/textures/gui/loader/logo_large.png"
+		)));
 		label.setBounds(0, 20, 300, 160);
 		this.add(label);
 
@@ -56,21 +60,41 @@ public class LoadingFrame extends JFrame {
 		this.pack();
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
+
+		this.reset();
 	}
 
+	@SuppressWarnings("WeakerAccess")
+	public final void reset() {
+		Launcher.logger().trace("Reset loading bar progress");
+		this.updateProgressBar(0, "");
+		this.bar.setValue(0);
+		this.setVisible(true);
+	}
+
+	@SuppressWarnings("WeakerAccess")
 	public final void updateProgressBarMessage(final String message) {
+		if (message.equals(this.bar.getString())) return;
 		this.bar.setStringPainted(false);
 		this.bar.setString(message);
 		this.bar.setStringPainted(true);
+		Launcher.logger().trace("New progress bar message set: " + message);
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public final void updateProgressBar(final int newVal, final String message) {
 		final int val = Math.max(0, Math.min(100, Math.max(this.bar.getValue(), newVal)));
 		this.updateProgressBarMessage(message);
 		this.bar.setValue(val);
+
+		Launcher.logger().trace("New progress bar progress set: " + newVal);
+
+		if (val >= 100) this.setVisible(false); // We think the task is completed.
 	}
 
+	@SuppressWarnings("WeakerAccess")
 	public final void updateProgressBarGently(final int newVal, final String message) {
+		Launcher.logger().trace("Updating progress bar gently to " + newVal);
 		final int val = Math.max(0, Math.min(100, Math.max(this.bar.getValue(), newVal)));
 		int start = this.bar.getValue();
 		for (; start <= val; ++start) {
