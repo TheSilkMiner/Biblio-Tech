@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Contract;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -66,9 +67,14 @@ public enum StatCollector {
 
 		final BufferedReader reader;
 		try {
+			/*
 			reader = new BufferedReader(new FileReader(new File(this.getClass().getResource(String.format(
 					"/assets/biblio-tech/launcher/lang/%s.lang", language.languageCode()
 			)).getFile())));
+			*/
+			reader = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(String.format(
+					"/assets/biblio-tech/launcher/lang/%s.lang", language.languageCode()
+			))));
 		} catch (final Throwable e) {
 			if (language.equals(Languages.ENGLISH_USA)) {
 				this.log().error("Main file not found. Crashing!");
