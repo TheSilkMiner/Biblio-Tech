@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import net.thesilkminer.bibliotech.launcher.Launcher;
+import net.thesilkminer.bibliotech.launcher.logging.Logger;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,11 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -27,6 +33,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
@@ -150,6 +157,9 @@ public enum CrashReportHandler {
 					"Error while creating crash report",
 					"Unexpected exception",
 					JOptionPane.ERROR_MESSAGE);
+			// Output to file (through logger) so that it keeps track of the exception
+			// We will never know what caused the crash otherwise
+			this.outputThrowable(t);
 			System.exit(-3);
 		}
 	}
@@ -170,12 +180,20 @@ public enum CrashReportHandler {
 					"Error while creating crash report",
 					"Unexpected exception",
 					JOptionPane.ERROR_MESSAGE);
+			// Output to file (through logger) so that it keeps track of the exception
+			// We will never know what caused the crash otherwise
+			this.outputThrowable(t);
 			System.exit(-4);
 		}
 	}
 
 	private CrashReport populateReport(final Thread t, final Throwable thr) {
 		final CrashReport report = new CrashReport(thr, t);
+		this.handleReportedException(report, thr);
+		return report;
+	}
+
+	private void handleReportedException(final CrashReport report, final Throwable thr) {
 		if (thr instanceof ReportedException) {
 			final ReportedException exception = (ReportedException) thr;
 			report.description(exception.description());
@@ -190,11 +208,142 @@ public enum CrashReportHandler {
 							"Error while creating crash report",
 							"Unexpected exception",
 							JOptionPane.ERROR_MESSAGE);
+					// Output to file (through logger) so that it keeps track of the exception
+					// We will never know what caused the crash otherwise
+					this.outputThrowable(throwable);
 					System.exit(-5);
 				}
 			});
+		} else if (thr.getCause() != null) {
+			try {
+				this.handleReportedException(report, thr.getCause());
+			} catch (final StackOverflowError e) {
+				this.outputThrowable(e);
+			}
 		}
-		return report;
+	}
+
+	private void outputThrowable(final Throwable t) {
+		final Logger log = Logger.obtain("Crash Handler");
+		log.warning("********************************************************************************");
+		log.warning("*          Unable to construct crash report for this particular crash          *");
+		log.warning("********************************************************************************");
+		log.warning("*  An unknown error has occurred while attempting to prompt the crash report   *");
+		log.warning("* to the user.                                                                 *");
+		log.warning("*                                                                              *");
+		log.warning("*  After this error message, the throwable will be printed to file and on the  *");
+		log.warning("* on the console. Please read the stacktrace carefully: a mod may have caused  *");
+		log.warning("* this. If you don't have any mod installed and/or you are able to reproduce   *");
+		log.warning("* this in a vanilla environment, then please contact the developer and submit  *");
+		log.warning("* a bug report. Attach this log file and accurate reproduction steps.          *");
+		log.warning("*                                                                              *");
+		log.warning("*  TO THE DEVELOPERS: If you are unsure about what happened, ask the lead dev, *");
+		log.warning("* do NOT attempt to fix this if you don't know what to do: it makes things     *");
+		log.warning("* worse.                                                                       *");
+		log.warning("********************************************************************************");
+		log.warning("*                                                                              *");
+		log.warning("********************************************************************************");
+		log.warning("");
+		log.warning("********************************************************************************");
+		log.warning("*                               Stacktrace dump                                *");
+		log.warning("********************************************************************************");
+		this.printStackTrace(t, log);
+		log.warning("********************************************************************************");
+		log.warning("*                                                                              *");
+		log.warning("********************************************************************************");
+		log.warning("");
+		log.warning("********************************************************************************");
+		log.warning("*                                 Thread dump                                  *");
+		log.warning("********************************************************************************");
+		final Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
+		stacks.entrySet().stream().forEach(stack -> {
+			log.warning("\tThread: " + stack.getKey().getName());
+			log.warning("\tStacktrace:");
+			Arrays.stream(stack.getValue()).forEach(ele -> log.warning("\t\t" + ele.toString()));
+			log.warning("\t");
+		});
+		log.warning("********************************************************************************");
+		log.warning("*                                                                              *");
+		log.warning("********************************************************************************");
+		JOptionPane.showMessageDialog(null,
+				"Please read the console output",
+				t.getMessage().concat(" - Unexpected exception"),
+				JOptionPane.ERROR_MESSAGE);
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				try {
+					Thread.sleep(10000);
+				} catch (final InterruptedException e) {
+					// Suppress this because we don't care.
+				}
+			});
+		} catch (final InterruptedException | InvocationTargetException e) {
+			// Suppress this because we don't care.
+		}
+	}
+
+	/*
+	 * A copy of the method present in Throwable.class edited so that the stacktrace can
+	 * be written to a StringBuilder
+	 */
+	private void printStackTrace(final Throwable throwable, final Logger log) {
+		final Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+		seen.add(throwable);
+		log.warning(throwable.toString());
+
+		Arrays.stream(throwable.getStackTrace()).forEach(ele ->	log.warning(String.format("\tat %s", ele)));
+
+		Arrays.stream(throwable.getSuppressed()).forEach(thr ->
+				this.printEnclosedStackTrace(thr, log, throwable.getStackTrace(), "Suppressed: ", "\t", seen)
+		);
+
+		if (throwable.getCause() != null)
+			this.printEnclosedStackTrace(throwable.getCause(), log, throwable.getStackTrace(), "Caused by: ", "", seen);
+	}
+
+	/*
+	 * A copy of the method present in Throwable.class edited so that the stacktrace can
+	 * be written to a StringBuilder
+	 */
+	private void printEnclosedStackTrace(final Throwable throwable,
+	                                     final Logger log,
+	                                     final StackTraceElement[] enclosing,
+	                                     final String caption,
+	                                     final String prefix,
+	                                     final Set<Throwable> seen) {
+		if (seen.contains(throwable)) {
+			log.warning(String.format("\t[CIRCULAR REFERENCE: %s]", throwable));
+			return;
+		}
+
+		seen.add(throwable);
+
+		final StackTraceElement[] trace = throwable.getStackTrace();
+		int m = trace.length - 1;
+		int n = enclosing.length - 1;
+
+		while (m >= 0 && n >=0 && trace[m].equals(enclosing[n])) {
+			m--;
+			n--;
+		}
+
+		final int framesInCommon = trace.length - 1 - m;
+
+		log.warning(prefix + caption + throwable);
+
+		for (int i = 0; i <= m; i++) {
+			log.warning(String.format("%s\tat %s", prefix, trace[i]));
+		}
+
+		if (framesInCommon != 0) {
+			log.warning(String.format("%s\t... %d more", prefix, framesInCommon));
+		}
+
+		Arrays.stream(throwable.getSuppressed()).forEach(thr ->
+				this.printEnclosedStackTrace(thr, log, trace, "Suppressed: ", prefix + "\t", seen));
+
+		if (throwable.getCause() != null)
+			this.printEnclosedStackTrace(throwable.getCause(), log, trace, "Caused by: ", prefix, seen);
 	}
 
 	public final boolean registerProvider(final String name, final int priority, final ICrashInfoProvider provider) {
