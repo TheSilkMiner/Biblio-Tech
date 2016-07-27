@@ -17,7 +17,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -33,7 +32,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
@@ -269,17 +267,15 @@ public enum CrashReportHandler {
 				"Please read the console output",
 				t.getMessage().concat(" - Unexpected exception"),
 				JOptionPane.ERROR_MESSAGE);
-		try {
-			SwingUtilities.invokeAndWait(() -> {
-				try {
-					Thread.sleep(10000);
-				} catch (final InterruptedException e) {
-					// Suppress this because we don't care.
-				}
-			});
-		} catch (final InterruptedException | InvocationTargetException e) {
-			// Suppress this because we don't care.
-		}
+
+		new Thread(() -> {
+			try {
+				Thread.sleep(10000);
+			} catch (final InterruptedException ignored) {
+				// We don't really care about this
+			}
+			System.exit(-6);
+		});
 	}
 
 	/*

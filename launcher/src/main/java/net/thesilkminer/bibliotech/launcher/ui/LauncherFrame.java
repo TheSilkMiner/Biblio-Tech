@@ -104,6 +104,10 @@ public class LauncherFrame extends JFrame {
 			if (!(e.getSource() instanceof JComboBox<?>)) return;
 			final JComboBox<?> source = (JComboBox<?>) e.getSource();
 			StatCollector.INSTANCE.setLocale(Languages.values()[source.getSelectedIndex()]);
+			JOptionPane.showMessageDialog(this,
+					"To change language, please reboot this software",
+					"Language change",
+					JOptionPane.INFORMATION_MESSAGE);
 		});
 
 		final JComboBox<Level> loggingLevelOptions = new JComboBox<>(Level.values());

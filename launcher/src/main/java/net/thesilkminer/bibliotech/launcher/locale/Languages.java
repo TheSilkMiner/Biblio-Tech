@@ -28,7 +28,7 @@ public enum Languages {
 	},
 	ITALIAN("it_IT");
 
-	public final String languageCode;
+	private final String languageCode;
 
 	Languages(final String languageCode) {
 		this.languageCode = languageCode;
@@ -38,6 +38,12 @@ public enum Languages {
 	@Nonnull
 	protected String overrideToString() {
 		return "";
+	}
+
+	@Contract(value = "-> !null", pure = true)
+	@Nonnull
+	public final String languageCode() {
+		return this.languageCode;
 	}
 
 	@Contract(pure = true)
