@@ -63,6 +63,8 @@ public final class Logger {
 		final String mainSource = "Logger";
 		loggerLogger = Logger.obtain(mainSource);
 		loggerLogger.finer(String.format("Requested new logger for source %s", mainSource));
+
+		Runtime.getRuntime().addShutdownHook(new Thread(out::close));
 	}
 
 	@Nonnull
