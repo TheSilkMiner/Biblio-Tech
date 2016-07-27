@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 
 import net.thesilkminer.bibliotech.launcher.Launcher;
 import net.thesilkminer.bibliotech.launcher.logging.Logger;
+import net.thesilkminer.bibliotech.launcher.os.Os;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -17,8 +18,15 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Random;
@@ -76,18 +84,32 @@ public enum CrashReportHandler {
 			constraints.anchor = GridBagConstraints.PAGE_START;
 			this.add(title, constraints);
 
+			final JLabel savedNotice = new JLabel("This crash has been saved to crash-reports directory");
+			savedNotice.setVerticalAlignment(SwingConstants.CENTER);
+			savedNotice.setHorizontalAlignment(SwingConstants.CENTER);
+			savedNotice.setForeground(Color.YELLOW);
+			savedNotice.setBounds(0, 0, 100, 40);
+			constraints.gridx = 0;
+			constraints.gridy = 1;
+			constraints.weightx = 0;
+			constraints.weighty = 0;
+			constraints.ipady = 0;
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			this.add(savedNotice, constraints);
+
 			final JTextArea crashReport = new JTextArea();
 			crashReport.setEditable(false);
 			crashReport.setBorder(new BevelBorder(BevelBorder.RAISED));
 			crashReport.setText(report.toString());
 			crashReport.setBackground(new Color(40, 40, 40).brighter());
+			crashReport.setCaretPosition(0);
 
 			final JScrollPane scrollable = new JScrollPane(crashReport,
 					ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
 					ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 			scrollable.setMinimumSize(new Dimension(800, 1000));
 			constraints.gridx = 0;
-			constraints.gridy = 1;
+			constraints.gridy = 2;
 			constraints.weightx = 10;
 			constraints.weighty = 100;
 			constraints.ipady = 0;
@@ -188,7 +210,35 @@ public enum CrashReportHandler {
 	private CrashReport populateReport(final Thread t, final Throwable thr) {
 		final CrashReport report = new CrashReport(thr, t);
 		this.handleReportedException(report, thr);
+		try {
+			this.saveReport(report);
+		} catch (final IOException e) {
+			// Unable to save crash report
+			// Fine
+			// Save it to log then, baby
+			this.outputThrowable(thr);
+		}
 		return report;
+	}
+
+	@SuppressWarnings("ResultOfMethodCallIgnored")
+	private boolean saveReport(final CrashReport report) throws IOException {
+		final File btDir = Os.getCurrentOs().workingDir();
+		final File crashDirectory = new File(btDir, "crash-reports");
+		if (!btDir.exists() || !crashDirectory.exists()) crashDirectory.mkdirs();
+		final Calendar calendar = new GregorianCalendar();
+		final File crashFile = new File(crashDirectory, String.format(
+				"crash-%s-%02d.%02d.%02d-%d.txt",
+				String.valueOf(report.platformType()).toLowerCase(java.util.Locale.ENGLISH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.MONTH) + 1,
+				calendar.get(Calendar.YEAR),
+				System.currentTimeMillis()
+		));
+		final PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(crashFile)));
+		writer.print(report);
+		writer.close();
+		return crashFile.exists();
 	}
 
 	private void handleReportedException(final CrashReport report, final Throwable thr) {

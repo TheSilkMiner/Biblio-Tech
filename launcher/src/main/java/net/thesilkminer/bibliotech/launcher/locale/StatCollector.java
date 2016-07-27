@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Contract;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Map;
 
@@ -93,13 +92,15 @@ public enum StatCollector {
 				.filter(line -> !line.isEmpty())
 				.filter(line -> {
 					if (!line.startsWith("#")) return true;
-					this.log().fine("Found comment line in file --> skipping over it");
+					this.log().fine("Found comment line in file -> skipping over it");
+					this.log().trace("Processing comment " + line);
 					return false;
 				})
 				.filter(line -> {
 					if (line.contains("=")) return true;
 					this.log().warning("Identified line not containing an equal sign");
 					this.log().warning("Currently skipping it, but the behaviour may change in future versions");
+					this.log().trace("Processing invalid line " + line);
 					return false;
 				})
 				.forEachOrdered(line -> {
@@ -114,6 +115,7 @@ public enum StatCollector {
 					this.locale.put(pair.getLeft(), pair.getRight());
 					this.log().info(String.format("Registering pair %s -> %s", id.trim(), translation));
 					this.log().debug("    " + pair.toString());
+					this.log().trace("Processing line " + line);
 				});
 
 		this.log().finer("Checking language code: it should match " + language.languageCode());

@@ -131,7 +131,9 @@ public class LauncherFrame extends JFrame {
 
 		final JLabel updatesAvailable = new JLabel(StatCollector.INSTANCE.translateToLocal(UPDATES$FOUND)); // TODO
 		updatesAvailable.setHorizontalAlignment(SwingConstants.CENTER);
-		if (updatesAvailable.getText().equals(UPDATES$FOUND)) updatesAvailable.setForeground(new Color(191, 98, 4));
+		if (updatesAvailable.getText().equals(StatCollector.INSTANCE.translateToLocal(UPDATES$FOUND))) {
+			updatesAvailable.setForeground(new Color(191, 98, 4));
+		}
 
 		final JComboBox<String> versionOptions = new JComboBox<>(new String[] {"dev"});
 		versionOptions.setEnabled(true);
@@ -291,6 +293,7 @@ public class LauncherFrame extends JFrame {
 					bytes[1] = 'd'; // Just complete the word
 					for (int i = 0; i < bytes.length; ++i) {
 						if (bytes[i] == '\n') bytes[i] = -100; // Whatever -100 is in characters...
+						if (bytes[i] == '\r') bytes[i] = 100; // Whatever 100 is in characters...
 					}
 					exception.addCustomProvider(new String(bytes), (report, builder) -> {
 						throw new RuntimeException();
