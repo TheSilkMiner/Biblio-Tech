@@ -99,16 +99,25 @@ public interface ICrashReportCategory extends ICrashInfoProvider {
 			}
 
 			private void provideInfo$task(final StringBuilder builder) throws Exception {
-				EventQueue.invokeAndWait(() -> {
-					final Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
-					stacks.entrySet().stream().forEach(stack -> {
-						builder.append(this.indent()).append("Thread: ").append(stack.getKey().getName()).append("\n");
-						builder.append(this.indent()).append("Stacktrace:\n");
-						Arrays.stream(stack.getValue()).forEach(element ->
-								builder.append(this.indent())
-										.append(this.indent()).append(element.toString()).append("\n"));
-						builder.append(this.indent()).append("\n");
-					});
+				try {
+					EventQueue.invokeAndWait(() -> this.provideInfo$task$task(builder));
+				} catch (final Error e) {
+					if (!e.getMessage().contains("event dispatcher thread")) throw e;
+					// Async call not available for the event dispatcher thread
+					// Try with a sync call
+					this.provideInfo$task$task(builder);
+				}
+			}
+
+			private void provideInfo$task$task(final StringBuilder builder) {
+				final Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
+				stacks.entrySet().stream().forEach(stack -> {
+					builder.append(this.indent()).append("Thread: ").append(stack.getKey().getName()).append("\n");
+					builder.append(this.indent()).append("Stacktrace:\n");
+					Arrays.stream(stack.getValue()).forEach(element ->
+							builder.append(this.indent())
+									.append(this.indent()).append(element.toString()).append("\n"));
+					builder.append(this.indent()).append("\n");
 				});
 			}
 		};
@@ -146,20 +155,29 @@ public interface ICrashReportCategory extends ICrashInfoProvider {
 			}
 
 			private void provideInfo$task(final CrashReport report, final StringBuilder builder) throws Exception {
-				EventQueue.invokeAndWait(() ->
-					CrashReportHandler.INSTANCE.providers().forEach(provider -> {
-						builder.append(this.indent()).append("-- ").append(provider.id()).append(" --\n");
-						try {
-							this.provideInfo$task$task(provider, report, builder);
-						} catch (final RuntimeException e) {
-							builder.append(this.indent()).append("Error occurred while obtaining provider information.")
-									.append("\n").append(this.indent()).append("Provider skipped.").append("\n");
-						}
-					})
-				);
+				try {
+					EventQueue.invokeAndWait(() -> this.provideInfo$task$task(report, builder));
+				} catch (final Error e) {
+					if (!e.getMessage().contains("event dispatcher thread")) throw e;
+					// Async call not available for the event dispatcher thread
+					// Try with a sync call
+					this.provideInfo$task$task(report, builder);
+				}
 			}
 
-			private void provideInfo$task$task(final CrashReportHandler.CrashInfoProviderRegister provider,
+			private void provideInfo$task$task(final CrashReport report, final StringBuilder builder) {
+				CrashReportHandler.INSTANCE.providers().forEach(provider -> {
+					builder.append(this.indent()).append("-- ").append(provider.id()).append(" --\n");
+					try {
+						this.provideInfo$task$task$task(provider, report, builder);
+					} catch (final RuntimeException e) {
+						builder.append(this.indent()).append("Error occurred while obtaining provider information.")
+								.append("\n").append(this.indent()).append("Provider skipped.").append("\n");
+					}
+				});
+			}
+
+			private void provideInfo$task$task$task(final CrashReportHandler.CrashInfoProviderRegister provider,
 			                                   final CrashReport report,
 			                                   final StringBuilder builder) {
 				final StringBuilder tmp = new StringBuilder();

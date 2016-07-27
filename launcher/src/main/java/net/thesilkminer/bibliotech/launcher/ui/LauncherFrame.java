@@ -281,6 +281,7 @@ public class LauncherFrame extends JFrame {
 					// Now let's have some fun...
 					final byte[] bytes = new byte[1024]; // 1 kb of information, wow!
 					//final byte[] bytes = new byte[1024 * 1024] // Let's avoid being evil with 1 MB of characters
+					//final byte[] bytes = new byte[1024 * 1024 * 1024] // Or even a GB
 					new Random(new Random(System.currentTimeMillis()).nextLong()).nextBytes(bytes); // Randomness...
 					bytes[0] = 'i'; // Let's avoid crashing right as soon as a "toString()" is invoked
 					bytes[1] = 'd'; // Just complete the word
