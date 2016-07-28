@@ -55,7 +55,11 @@ public enum StatCollector {
 
 	public void setLocale(@Nonnull final Languages language) {
 		// Micro-optimization: don't reload the same language
-		if (language == this.current) return;
+		if (language == this.current) {
+			this.log().fine("Attempted to reload the same language " + language);
+			this.log().fine("Stopped");
+			return;
+		}
 
 		this.log().info("Attempting to set language to " + language.toString());
 		this.log().fine("    Language code: " + language.languageCode());
@@ -91,30 +95,29 @@ public enum StatCollector {
 				.filter(line -> !line.isEmpty())
 				.filter(line -> {
 					if (!line.startsWith("#")) return true;
-					this.log().fine("Found comment line in file -> skipping over it");
 					this.log().trace("Processing comment " + line);
+					this.log().fine("Found comment line in file -> skipping over it");
 					return false;
 				})
 				.filter(line -> {
 					if (line.contains("=")) return true;
+					this.log().trace("Processing invalid line " + line);
 					this.log().warning("Identified line not containing an equal sign");
 					this.log().warning("Currently skipping it, but the behaviour may change in future versions");
-					this.log().trace("Processing invalid line " + line);
 					return false;
 				})
 				.forEachOrdered(line -> {
+					this.log().trace("Processing line " + line);
 					final int equalLocation = line.indexOf('=');
 					if (equalLocation == -1) throw new RuntimeException("equalLocation == -1");
 					final String id = line.substring(0, equalLocation);
 					final String translation = line.substring(equalLocation).substring(1);
-					final Pair<String, String> pair = Pair.of(id.trim(), translation);
-					if (pair.getLeft().isEmpty() || pair.getRight().isEmpty()) {
+					this.log().info("Registering translation for id " + id.trim());
+					if (id.trim().isEmpty() || translation.isEmpty()) {
 						this.log().warning("Id or translation is empty. Please check the translation");
 					}
-					this.locale.put(pair.getLeft(), pair.getRight());
-					this.log().info(String.format("Registering pair %s -> %s", id.trim(), translation));
-					this.log().debug("    " + pair.toString());
-					this.log().trace("Processing line " + line);
+					this.locale.put(id.trim(), translation);
+					this.log().trace(String.format("Registering pair %s -> %s", id.trim(), translation));
 				});
 
 		this.log().finer("Checking language code: it should match " + language.languageCode());
@@ -136,8 +139,8 @@ public enum StatCollector {
 			return;
 		}
 
-		this.log().finest("Matches. Allowing the process to complete");
-		this.log().trace("Current language map: " + this.locale.toString());
+		this.log().finest("Code matches. Completing process");
+		this.log().debug("Current language map: " + this.locale.toString());
 
 		this.current = language;
 	}

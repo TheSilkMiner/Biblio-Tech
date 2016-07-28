@@ -112,6 +112,12 @@ public class LauncherFrame extends JFrame {
 			if (!(e.getSource() instanceof JComboBox<?>)) return;
 			final JComboBox<?> source = (JComboBox<?>) e.getSource();
 			final Languages lang = Languages.values()[source.getSelectedIndex()];
+			final Languages current = StatCollector.INSTANCE.currentLocale();
+			if (lang == current) {
+				Launcher.logger().info("Reloading the same language: why would you do that?");
+				Launcher.logger().finest("Skip reload, please");
+				return;
+			}
 			Launcher.logger().info(String.format("Setting new language (%s)", lang));
 			StatCollector.INSTANCE.setLocale(lang);
 			if (!StatCollector.INSTANCE.isCurrentLocale(lang)) {

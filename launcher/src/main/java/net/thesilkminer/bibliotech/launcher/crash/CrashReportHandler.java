@@ -10,6 +10,7 @@ import net.thesilkminer.bibliotech.launcher.os.Os;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.Cursor;
 import java.awt.Color;
@@ -44,6 +45,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
@@ -345,14 +347,23 @@ public enum CrashReportHandler {
 				t.getMessage().concat(" - Unexpected exception"),
 				JOptionPane.ERROR_MESSAGE);
 
-		new Thread(() -> {
-			try {
-				Thread.sleep(10000);
-			} catch (final InterruptedException ignored) {
-				// We don't really care about this
+		new SwingWorker<Void, Void>() {
+			@Contract("-> null")
+			@Nullable
+			@Override
+			protected Void doInBackground() throws Exception {
+				try {
+					Thread.sleep(10000);
+				} catch (final InterruptedException ignored) {}
+				return null;
 			}
-			System.exit(-6);
-		});
+
+			@Contract("-> fail")
+			@Override
+			protected void done() {
+				System.exit(-5);
+			}
+		}.execute();
 	}
 
 	/*
