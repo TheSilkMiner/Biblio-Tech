@@ -57,8 +57,7 @@ public class CrashReport {
 					current = SoftwareStatus.MODDED;
 				} catch (final ClassNotFoundException ex) {
 					try {
-						if (new java.io.File(SoftwareStatus.class.getResource("/META-INF/SECURITY.TSM").getFile())
-								.exists()) {
+						if (SoftwareStatus.class.getClassLoader().getResource("META-INF/SECURITY.TSM") != null) {
 							throw new ClassNotFoundException();
 						}
 						current = SoftwareStatus.UNLIKELY_MODDED;

@@ -1,5 +1,7 @@
 package net.thesilkminer.bibliotech.launcher.ui;
 
+import com.google.common.collect.Maps;
+
 import net.thesilkminer.bibliotech.launcher.Launcher;
 import net.thesilkminer.bibliotech.launcher.auth.AuthData;
 import net.thesilkminer.bibliotech.launcher.auth.AuthDatabase;
@@ -19,6 +21,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.Map;
 import java.util.Random;
 
 import javax.annotation.Nonnull;
@@ -65,6 +68,8 @@ public class LauncherFrame extends JFrame {
 	private final JButton log;
 	private final JPasswordField passField;
 	private final JTextField userNameField;
+	private final JCheckBox updates;
+	private final Map<String, JLabel> labels = Maps.newHashMap();
 
 	private int loginTimes;
 
@@ -86,15 +91,18 @@ public class LauncherFrame extends JFrame {
 
 		final JLabel languageLabel = new JLabel(StatCollector.INSTANCE.translateToLocal(LANGUAGE));
 		languageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		this.labels.put(LANGUAGE, languageLabel);
 
 		final JLabel loggingLevelLabel = new JLabel(StatCollector.INSTANCE.translateToLocal(LEVEL));
 		loggingLevelLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		this.labels.put(LEVEL, loggingLevelLabel);
 
-		final JCheckBox updates = new JCheckBox(StatCollector.INSTANCE.translateToLocal(UPDATES$SEARCH), null, true);
-		updates.setHorizontalAlignment(SwingConstants.RIGHT);
+		this.updates = new JCheckBox(StatCollector.INSTANCE.translateToLocal(UPDATES$SEARCH), null, true);
+		this.updates.setHorizontalAlignment(SwingConstants.RIGHT);
 
 		final JLabel versionLabel = new JLabel(StatCollector.INSTANCE.translateToLocal(VERSION));
 		versionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		this.labels.put(VERSION, versionLabel);
 
 		final JComboBox<Languages> languageOptions = new JComboBox<>(Languages.values());
 		languageOptions.setEnabled(true);
@@ -103,11 +111,19 @@ public class LauncherFrame extends JFrame {
 		languageOptions.addActionListener(e -> {
 			if (!(e.getSource() instanceof JComboBox<?>)) return;
 			final JComboBox<?> source = (JComboBox<?>) e.getSource();
-			StatCollector.INSTANCE.setLocale(Languages.values()[source.getSelectedIndex()]);
-			JOptionPane.showMessageDialog(this,
-					"To change language, please reboot this software",
-					"Language change",
-					JOptionPane.INFORMATION_MESSAGE);
+			final Languages lang = Languages.values()[source.getSelectedIndex()];
+			Launcher.logger().info(String.format("Setting new language (%s)", lang));
+			StatCollector.INSTANCE.setLocale(lang);
+			if (!StatCollector.INSTANCE.isCurrentLocale(lang)) {
+				// An error has occurred while setting the new locale, so...
+				JOptionPane.showMessageDialog(this,
+						"Impossible to set the new language to " + lang + ". Falling back to English (USA)",
+						"Invalid language",
+						JOptionPane.ERROR_MESSAGE);
+				languageOptions.setSelectedItem(StatCollector.INSTANCE.currentLocale());
+			}
+			// Schedule label refresh...
+			this.refreshLabels();
 		});
 
 		final JComboBox<Level> loggingLevelOptions = new JComboBox<>(Level.values());
@@ -133,6 +149,9 @@ public class LauncherFrame extends JFrame {
 		updatesAvailable.setHorizontalAlignment(SwingConstants.CENTER);
 		if (updatesAvailable.getText().equals(StatCollector.INSTANCE.translateToLocal(UPDATES$FOUND))) {
 			updatesAvailable.setForeground(new Color(191, 98, 4));
+			this.labels.put(UPDATES$FOUND, updatesAvailable);
+		} else {
+			this.labels.put(UPDATES$SEARCH, updatesAvailable);
 		}
 
 		final JComboBox<String> versionOptions = new JComboBox<>(new String[] {"dev"});
@@ -149,7 +168,7 @@ public class LauncherFrame extends JFrame {
 		options.add(languageOptions);
 		options.add(loggingLevelLabel);
 		options.add(loggingLevelOptions);
-		options.add(updates);
+		options.add(this.updates);
 		options.add(updatesAvailable);
 		options.add(versionLabel);
 		options.add(versionOptions);
@@ -166,6 +185,7 @@ public class LauncherFrame extends JFrame {
 		c.weighty = 1;
 
 		login.add(userNameLabel, c);
+		this.labels.put(USERNAME, userNameLabel);
 
 		this.userNameField = new JTextField();
 		this.userNameField.setColumns(4);
@@ -204,6 +224,7 @@ public class LauncherFrame extends JFrame {
 		c.weighty = 1;
 
 		login.add(passLabel, c);
+		this.labels.put(PASSWORD, passLabel);
 
 		this.passField = new JPasswordField();
 		this.passField.setColumns(4);
@@ -327,5 +348,21 @@ public class LauncherFrame extends JFrame {
 		this.pack();
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
+	}
+
+	private void refreshLabels() {
+		Launcher.logger().trace("Reloading labels");
+		this.labels.entrySet().stream().forEach(entry ->
+				entry.getValue().setText(StatCollector.INSTANCE.translateToLocal(entry.getKey())));
+		this.updates.setText(StatCollector.INSTANCE.translateToLocal(UPDATES$SEARCH));
+		this.log.setText(StatCollector.INSTANCE.translateToLocal(LOGIN));
+		this.clear.setText(StatCollector.INSTANCE.translateToLocal(CLEAR));
+
+		// Wait for a second. Just as a safety thing
+		try {
+			Thread.sleep(1000);
+		} catch (final InterruptedException ignored) {}
+
+		Launcher.logger().trace("Done");
 	}
 }

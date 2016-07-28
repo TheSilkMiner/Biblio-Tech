@@ -9,8 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Contract;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.Map;
 
@@ -67,11 +65,6 @@ public enum StatCollector {
 
 		final BufferedReader reader;
 		try {
-			/*
-			reader = new BufferedReader(new FileReader(new File(this.getClass().getResource(String.format(
-					"/assets/biblio-tech/launcher/lang/%s.lang", language.languageCode()
-			)).getFile())));
-			*/
 			reader = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(String.format(
 					"/assets/biblio-tech/launcher/lang/%s.lang", language.languageCode()
 			))));
@@ -147,5 +140,16 @@ public enum StatCollector {
 		this.log().trace("Current language map: " + this.locale.toString());
 
 		this.current = language;
+	}
+
+	@Contract(value = "null -> fail; !null -> _", pure = true)
+	public boolean isCurrentLocale(@Nonnull final Languages lang) {
+		return this.current == lang;
+	}
+
+	@Contract(value = "-> !null", pure = true)
+	@Nonnull
+	public Languages currentLocale() {
+		return this.current;
 	}
 }

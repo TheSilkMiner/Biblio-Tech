@@ -11,11 +11,15 @@ import net.thesilkminer.bibliotech.launcher.os.Os;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.Cursor;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedWriter;
@@ -60,7 +64,13 @@ public enum CrashReportHandler {
 			super();
 			this.setTitle("Crash Handler - Biblio-Tech");
 			this.setLayout(new GridBagLayout());
+			this.setResizable(false);
 			this.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowDeiconified(final WindowEvent e) {
+					CrashFrame.this.setExtendedState(CrashFrame.this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+				}
+
 				@Override
 				public void windowClosing(final WindowEvent e) {
 					System.exit(-1);
@@ -89,6 +99,23 @@ public enum CrashReportHandler {
 			savedNotice.setHorizontalAlignment(SwingConstants.CENTER);
 			savedNotice.setForeground(Color.YELLOW);
 			savedNotice.setBounds(0, 0, 100, 40);
+			savedNotice.setToolTipText("Opens the crash-reports directory");
+			savedNotice.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			savedNotice.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(final MouseEvent e) {
+					if (!Desktop.isDesktopSupported()) return;
+					try {
+						Desktop.getDesktop().open(new File(Os.getCurrentOs().workingDir(), "crash-reports"));
+						CrashFrame.this.setExtendedState(CrashFrame.this.getExtendedState() | JFrame.ICONIFIED);
+					} catch (final IOException exception) {
+						JOptionPane.showMessageDialog(CrashFrame.this,
+								"Error occurred while attempting to open directory",
+								"Directory opening failed",
+								JOptionPane.WARNING_MESSAGE);
+					}
+				}
+			});
 			constraints.gridx = 0;
 			constraints.gridy = 1;
 			constraints.weightx = 0;

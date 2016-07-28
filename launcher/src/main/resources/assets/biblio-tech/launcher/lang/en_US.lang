@@ -1,3 +1,19 @@
 language.code=en_US
 language.name=English (USA)
 language.id=0
+
+launcher.login.bruteForce.message=The user got the password wrong for five times in a row. Assuming a brute force attack: shutting down...
+launcher.login.bruteForce.title=Brute Force Attack Detected
+launcher.login.button.clear=Clear fields
+launcher.login.wrongDetails.message=Wrong login data. Please try again.
+launcher.login.wrongDetails.title=Invalid login data
+launcher.settings.language=Language:
+launcher.settings.logLevel=Logging level:
+launcher.login.button.logging=Attempting to log in...
+launcher.login.button.login=Log in
+launcher.login.password=Password:
+launcher.settings.updates.available=Updates available for Biblio-Tech
+launcher.settings.updates.search=Search for updates on boot
+launcher.settings.updates.upToDate=Biblio-Tech is up-to-date
+launcher.login.username=Username:
+launcher.settings.version=Biblio-Tech version: 

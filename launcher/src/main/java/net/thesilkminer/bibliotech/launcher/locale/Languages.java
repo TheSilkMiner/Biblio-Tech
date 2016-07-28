@@ -58,6 +58,6 @@ public enum Languages {
 			toString.append(name.substring(1).toLowerCase());
 			toString.append(' ');
 		});
-		return toString.toString();
+		return toString.toString().substring(0, toString.toString().length() - 1);
 	}
 }
