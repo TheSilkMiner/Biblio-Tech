@@ -2,9 +2,16 @@ buildscript {
 	repositories {
 		mavenCentral()
 		jcenter()
+		maven {
+			name 'OpenMods Third Party'
+            url 'https://repo.openmods.info/artifactory/simple/thirdparty'
+		}
 	}
 	dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+		classpath group: 'net.thesilkminer.gradle.translationchecker',
+                  name: 'TranslationChecker',
+                  version: '1.1'
     }
 }
 
@@ -41,18 +48,27 @@ configurations {
 }
 
 dependencies {
+	// Guava
 	compile group: 'com.google.guava', name: 'guava', version: '12.0'
 	shade group: 'com.google.guava', name: 'guava', version: '12.0'
 	pack group: 'com.google.guava', name: 'guava', version: '12.0'
+	
+	// Apache Commons-Lang3
 	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
 	shade group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
 	pack group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+	
+	// Jetbrains Annotation
 	compile group: 'org.jetbrains', name: 'annotations', version: '15.0'
 	shade group: 'org.jetbrains', name: 'annotations', version: '15.0'
 	pack group: 'org.jetbrains', name: 'annotations', version: '15.0'
+	
+	// SKL Interpreter
 	compile project(":SKL-Java-Interpreter")
 	shade project(":SKL-Java-Interpreter")
 	pack project(":SKL-Java-Interpreter")
+	
+	// JUnit
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
@@ -192,4 +208,12 @@ task wrapper (type: Wrapper) {
 	gradleVersion = "2.14.1-rc-1"
 }
 
+task updateLauncherTranslations (type: net.thesilkminer.gradle.plugin.translationchecker.tasks.TranslationCheckTask) {
+    langDir = file("launcher/src/main/resources/assets/biblio-tech/launcher/lang")
+}
+
+task checkLauncherTranslations (type: net.thesilkminer.gradle.plugin.translationchecker.tasks.TranslationCheckTask) {
+    langDir = file("launcher/src/main/resources/assets/biblio-tech/launcher/lang")
+	dryRun = true
+}
 

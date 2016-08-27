@@ -2,6 +2,7 @@ package net.thesilkminer.bibliotech.launcher.crash;
 
 import com.google.common.collect.ImmutableList;
 
+import net.thesilkminer.bibliotech.launcher.locale.StatCollector;
 import net.thesilkminer.bibliotech.launcher.os.Os;
 
 import org.jetbrains.annotations.Contract;
@@ -155,6 +156,9 @@ public class CrashReport {
 	private String version;
 	private Os os;
 	private String java;
+	private String javaVm;
+	private String memory;
+	private String flags;
 	private SoftwareStatus softwareStatus;
 	private PlatformType platformType;
 	private String languageCode;
@@ -169,9 +173,15 @@ public class CrashReport {
 		this.java = System.getProperty("java.version")
 				+ ", "
 				+ System.getProperty("java.vendor");
+		this.javaVm = "~~TODO~~"; //TODO
+		this.memory = "~~TODO~~"; //TODO
+		this.flags = "~~TODO~~"; //TODO
 		this.softwareStatus = SoftwareStatus.test();
 		this.platformType = PlatformType.test();
-		this.languageCode = this.platformType.equals(PlatformType.SERVER)? "en_US" : "~~TODO~~"; //TODO
+		this.languageCode = this.platformType.equals(PlatformType.SERVER)?
+				"en_US" :
+				String.format("%s (%s)", StatCollector.INSTANCE.currentLocale().languageCode(),
+						StatCollector.INSTANCE.currentLocale().toString());
 	}
 
 	public Date generationTime() {
@@ -200,6 +210,18 @@ public class CrashReport {
 
 	public String java() {
 		return this.java;
+	}
+
+	public String javaVm() {
+		return this.javaVm;
+	}
+
+	public String memory() {
+		return this.memory;
+	}
+
+	public String flags() {
+		return this.flags;
 	}
 
 	public SoftwareStatus softwareStatus() {

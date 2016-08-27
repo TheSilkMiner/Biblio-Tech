@@ -202,9 +202,9 @@ public interface ICrashReportCategory extends ICrashInfoProvider {
 				builder.append(this.indent()).append("Biblio-Tech version: ").append(report.version()).append("\n");
 				builder.append(this.indent()).append("Operating system: ").append(report.os().details()).append("\n");
 				builder.append(this.indent()).append("Java version: ").append(report.java()).append("\n");
-				builder.append(this.indent()).append("Java VM version: ").append("").append("\n"); //TODO
-				builder.append(this.indent()).append("Memory: ").append("").append("\n"); //TODO
-				builder.append(this.indent()).append("JVM Flags: ").append("").append("\n"); //TODO
+				builder.append(this.indent()).append("Java VM version: ").append(report.javaVm()).append("\n");
+				builder.append(this.indent()).append("Memory: ").append(report.memory()).append("\n");
+				builder.append(this.indent()).append("JVM Flags: ").append(report.flags()).append("\n");
 				builder.append(this.indent()).append("Software status: ")
 						.append(report.softwareStatus()).append("\n");
 				builder.append(this.indent()).append("Type: ").append(report.platformType()).append("\n");

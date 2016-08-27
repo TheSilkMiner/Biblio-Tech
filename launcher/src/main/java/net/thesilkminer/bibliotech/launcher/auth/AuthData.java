@@ -74,7 +74,7 @@ public class AuthData {
 		return this.password;
 	}
 
-	 public final void secure() {
+	public final void secure() {
 		 for (int i = 0; i < this.password.length; ++i) this.password[i] = 0x0;
 	 }
 
@@ -91,6 +91,7 @@ public class AuthData {
 				.isEquals();
 	}
 
+	@Contract(pure = true)
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder(17, 37)
@@ -99,6 +100,7 @@ public class AuthData {
 				.toHashCode();
 	}
 
+	@Contract(value = "-> !null", pure = true)
 	@Nonnull
 	@Override
 	public String toString() {

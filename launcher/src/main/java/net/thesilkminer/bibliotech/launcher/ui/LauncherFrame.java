@@ -9,8 +9,8 @@ import net.thesilkminer.bibliotech.launcher.crash.ReportedException;
 import net.thesilkminer.bibliotech.launcher.locale.Languages;
 import net.thesilkminer.bibliotech.launcher.locale.StatCollector;
 import net.thesilkminer.bibliotech.launcher.logging.Level;
-
 import net.thesilkminer.bibliotech.launcher.logging.Logger;
+
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nls;
 
@@ -64,6 +64,8 @@ public class LauncherFrame extends JFrame {
 	@Nls private static final String USERNAME = "launcher.login.username";
 	@Nls private static final String VERSION = "launcher.settings.version";
 
+	private final Color defaultColor;
+
 	private final JButton clear;
 	private final JButton log;
 	private final JPasswordField passField;
@@ -82,6 +84,8 @@ public class LauncherFrame extends JFrame {
 		this.setResizable(false);
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		this.setLayout(new GridLayout(1, 1));
+		this.defaultColor = new JTextField().getForeground();
+		final Color backgroundColor = new JTextField().getBackground().brighter();
 
 		final JTabbedPane tabs = new JTabbedPane(SwingConstants.LEFT);
 		final GridBagConstraints c = new GridBagConstraints();
@@ -196,6 +200,7 @@ public class LauncherFrame extends JFrame {
 		this.userNameField = new JTextField();
 		this.userNameField.setColumns(4);
 		this.userNameField.setEditable(true);
+		this.userNameField.setBackground(backgroundColor);
 		this.userNameField.addKeyListener(new KeyAdapter() {
 			@Contract("null -> fail; !null -> _")
 			@Override
@@ -203,14 +208,28 @@ public class LauncherFrame extends JFrame {
 				if (LauncherFrame.this.userNameField.getText().length() >= 20) {
 					e.consume();
 					LauncherFrame.this.getToolkit().beep();
-					Launcher.logger().trace("Stopped user writing attempt");
+					Launcher.logger().finest("Stopped user writing attempt");
 					Launcher.logger().trace("    - Reason: Exceeded character limit");
 					Launcher.logger().trace("    - At: LauncherFrame.userNameField");
 				}
 			}
 		});
 		this.userNameField.addCaretListener(e -> {
+			boolean isEmpty = true;
+			for (final char character : LauncherFrame.this.passField.getPassword()) {
+				if (character == 0 || character == ' ' || character == '\n' || character == '\r') continue;
+				isEmpty = false;
+				break;
+			}
 			if (!LauncherFrame.this.userNameField.getText().isEmpty()) LauncherFrame.this.clear.setEnabled(true);
+			else if (isEmpty) LauncherFrame.this.clear.setEnabled(false);
+			if (LauncherFrame.this.userNameField.getText().length() >= 20) {
+				LauncherFrame.this.userNameField.setForeground(Color.RED);
+			} else if (LauncherFrame.this.userNameField.getText().length() >= 17) {
+				LauncherFrame.this.userNameField.setForeground(Color.YELLOW);
+			} else {
+				LauncherFrame.this.userNameField.setForeground(this.defaultColor);
+			}
 		});
 
 		c.gridx = 1;
@@ -235,6 +254,7 @@ public class LauncherFrame extends JFrame {
 		this.passField = new JPasswordField();
 		this.passField.setColumns(4);
 		this.passField.setEditable(true);
+		this.passField.setBackground(backgroundColor);
 		this.passField.addKeyListener(new KeyAdapter() {
 			@Contract("null -> fail; !null -> _")
 			@Override
@@ -242,14 +262,28 @@ public class LauncherFrame extends JFrame {
 				if (LauncherFrame.this.passField.getPassword().length >= 20) {
 					e.consume();
 					LauncherFrame.this.getToolkit().beep();
-					Launcher.logger().trace("Stopped user writing attempt");
+					Launcher.logger().finest("Stopped user writing attempt");
 					Launcher.logger().trace("    - Reason: Exceeded character limit");
 					Launcher.logger().trace("    - At: LauncherFrame.passField");
 				}
 			}
 		});
 		this.passField.addCaretListener(e -> {
-			if (LauncherFrame.this.passField.getPassword().length >= 0) LauncherFrame.this.clear.setEnabled(true);
+			boolean isEmpty = true;
+			for (final char character : LauncherFrame.this.passField.getPassword()) {
+				if (character == 0 || character == ' ' || character == '\n' || character == '\r') continue;
+				isEmpty = false;
+				break;
+			}
+			if (!isEmpty) LauncherFrame.this.clear.setEnabled(true);
+			else if (LauncherFrame.this.userNameField.getText().isEmpty()) LauncherFrame.this.clear.setEnabled(false);
+			if (LauncherFrame.this.passField.getPassword().length >= 20) {
+				LauncherFrame.this.passField.setForeground(Color.RED);
+			} else if (LauncherFrame.this.passField.getPassword().length >= 17) {
+				LauncherFrame.this.passField.setForeground(Color.YELLOW);
+			} else {
+				LauncherFrame.this.passField.setForeground(this.defaultColor);
+			}
 		});
 
 		c.gridx = 1;
